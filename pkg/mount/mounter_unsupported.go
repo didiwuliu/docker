@@ -1,4 +1,4 @@
-// +build !linux !amd64
+// +build !linux,!freebsd,!solaris freebsd,!cgo solaris,!cgo
 
 package mount
 

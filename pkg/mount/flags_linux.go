@@ -1,64 +1,85 @@
-// +build amd64
-
 package mount
 
 import (
-	"strings"
 	"syscall"
 )
 
-// Parse fstab type mount options into mount() flags
-// and device specific data
-func parseOptions(options string) (int, string) {
-	var (
-		flag int
-		data []string
-	)
+const (
+	// RDONLY will mount the file system read-only.
+	RDONLY = syscall.MS_RDONLY
 
-	flags := map[string]struct {
-		clear bool
-		flag  int
-	}{
-		"defaults":      {false, 0},
-		"ro":            {false, syscall.MS_RDONLY},
-		"rw":            {true, syscall.MS_RDONLY},
-		"suid":          {true, syscall.MS_NOSUID},
-		"nosuid":        {false, syscall.MS_NOSUID},
-		"dev":           {true, syscall.MS_NODEV},
-		"nodev":         {false, syscall.MS_NODEV},
-		"exec":          {true, syscall.MS_NOEXEC},
-		"noexec":        {false, syscall.MS_NOEXEC},
-		"sync":          {false, syscall.MS_SYNCHRONOUS},
-		"async":         {true, syscall.MS_SYNCHRONOUS},
-		"dirsync":       {false, syscall.MS_DIRSYNC},
-		"remount":       {false, syscall.MS_REMOUNT},
-		"mand":          {false, syscall.MS_MANDLOCK},
-		"nomand":        {true, syscall.MS_MANDLOCK},
-		"atime":         {true, syscall.MS_NOATIME},
-		"noatime":       {false, syscall.MS_NOATIME},
-		"diratime":      {true, syscall.MS_NODIRATIME},
-		"nodiratime":    {false, syscall.MS_NODIRATIME},
-		"bind":          {false, syscall.MS_BIND},
-		"rbind":         {false, syscall.MS_BIND | syscall.MS_REC},
-		"private":       {false, syscall.MS_PRIVATE},
-		"relatime":      {false, syscall.MS_RELATIME},
-		"norelatime":    {true, syscall.MS_RELATIME},
-		"strictatime":   {false, syscall.MS_STRICTATIME},
-		"nostrictatime": {true, syscall.MS_STRICTATIME},
-	}
+	// NOSUID will not allow set-user-identifier or set-group-identifier bits to
+	// take effect.
+	NOSUID = syscall.MS_NOSUID
 
-	for _, o := range strings.Split(options, ",") {
-		// If the option does not exist in the flags table then it is a
-		// data value for a specific fs type
-		if f, exists := flags[o]; exists {
-			if f.clear {
-				flag &= ^f.flag
-			} else {
-				flag |= f.flag
-			}
-		} else {
-			data = append(data, o)
-		}
-	}
-	return flag, strings.Join(data, ",")
-}
+	// NODEV will not interpret character or block special devices on the file
+	// system.
+	NODEV = syscall.MS_NODEV
+
+	// NOEXEC will not allow execution of any binaries on the mounted file system.
+	NOEXEC = syscall.MS_NOEXEC
+
+	// SYNCHRONOUS will allow I/O to the file system to be done synchronously.
+	SYNCHRONOUS = syscall.MS_SYNCHRONOUS
+
+	// DIRSYNC will force all directory updates within the file system to be done
+	// synchronously. This affects the following system calls: create, link,
+	// unlink, symlink, mkdir, rmdir, mknod and rename.
+	DIRSYNC = syscall.MS_DIRSYNC
+
+	// REMOUNT will attempt to remount an already-mounted file system. This is
+	// commonly used to change the mount flags for a file system, especially to
+	// make a readonly file system writeable. It does not change device or mount
+	// point.
+	REMOUNT = syscall.MS_REMOUNT
+
+	// MANDLOCK will force mandatory locks on a filesystem.
+	MANDLOCK = syscall.MS_MANDLOCK
+
+	// NOATIME will not update the file access time when reading from a file.
+	NOATIME = syscall.MS_NOATIME
+
+	// NODIRATIME will not update the directory access time.
+	NODIRATIME = syscall.MS_NODIRATIME
+
+	// BIND remounts a subtree somewhere else.
+	BIND = syscall.MS_BIND
+
+	// RBIND remounts a subtree and all possible submounts somewhere else.
+	RBIND = syscall.MS_BIND | syscall.MS_REC
+
+	// UNBINDABLE creates a mount which cannot be cloned through a bind operation.
+	UNBINDABLE = syscall.MS_UNBINDABLE
+
+	// RUNBINDABLE marks the entire mount tree as UNBINDABLE.
+	RUNBINDABLE = syscall.MS_UNBINDABLE | syscall.MS_REC
+
+	// PRIVATE creates a mount which carries no propagation abilities.
+	PRIVATE = syscall.MS_PRIVATE
+
+	// RPRIVATE marks the entire mount tree as PRIVATE.
+	RPRIVATE = syscall.MS_PRIVATE | syscall.MS_REC
+
+	// SLAVE creates a mount which receives propagation from its master, but not
+	// vice versa.
+	SLAVE = syscall.MS_SLAVE
+
+	// RSLAVE marks the entire mount tree as SLAVE.
+	RSLAVE = syscall.MS_SLAVE | syscall.MS_REC
+
+	// SHARED creates a mount which provides the ability to create mirrors of
+	// that mount such that mounts and unmounts within any of the mirrors
+	// propagate to the other mirrors.
+	SHARED = syscall.MS_SHARED
+
+	// RSHARED marks the entire mount tree as SHARED.
+	RSHARED = syscall.MS_SHARED | syscall.MS_REC
+
+	// RELATIME updates inode access times relative to modify or change time.
+	RELATIME = syscall.MS_RELATIME
+
+	// STRICTATIME allows to explicitly request full atime updates.  This makes
+	// it possible for the kernel to default to relatime or noatime but still
+	// allow userspace to override it.
+	STRICTATIME = syscall.MS_STRICTATIME
+)

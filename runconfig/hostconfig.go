@@ -1,46 +1,35 @@
 package runconfig
 
 import (
-	"github.com/dotcloud/docker/engine"
-	"github.com/dotcloud/docker/nat"
-	"github.com/dotcloud/docker/utils"
+	"encoding/json"
+	"io"
+
+	"github.com/docker/docker/api/types/container"
 )
 
-type HostConfig struct {
-	Binds           []string
-	ContainerIDFile string
-	LxcConf         []utils.KeyValuePair
-	Privileged      bool
-	PortBindings    nat.PortMap
-	Links           []string
-	PublishAllPorts bool
-	Dns             []string
-	DnsSearch       []string
-	VolumesFrom     []string
+// DecodeHostConfig creates a HostConfig based on the specified Reader.
+// It assumes the content of the reader will be JSON, and decodes it.
+func DecodeHostConfig(src io.Reader) (*container.HostConfig, error) {
+	decoder := json.NewDecoder(src)
+
+	var w ContainerConfigWrapper
+	if err := decoder.Decode(&w); err != nil {
+		return nil, err
+	}
+
+	hc := w.getHostConfig()
+	return hc, nil
 }
 
-func ContainerHostConfigFromJob(job *engine.Job) *HostConfig {
-	hostConfig := &HostConfig{
-		ContainerIDFile: job.Getenv("ContainerIDFile"),
-		Privileged:      job.GetenvBool("Privileged"),
-		PublishAllPorts: job.GetenvBool("PublishAllPorts"),
+// SetDefaultNetModeIfBlank changes the NetworkMode in a HostConfig structure
+// to default if it is not populated. This ensures backwards compatibility after
+// the validation of the network mode was moved from the docker CLI to the
+// docker daemon.
+func SetDefaultNetModeIfBlank(hc *container.HostConfig) *container.HostConfig {
+	if hc != nil {
+		if hc.NetworkMode == container.NetworkMode("") {
+			hc.NetworkMode = container.NetworkMode("default")
+		}
 	}
-	job.GetenvJson("LxcConf", &hostConfig.LxcConf)
-	job.GetenvJson("PortBindings", &hostConfig.PortBindings)
-	if Binds := job.GetenvList("Binds"); Binds != nil {
-		hostConfig.Binds = Binds
-	}
-	if Links := job.GetenvList("Links"); Links != nil {
-		hostConfig.Links = Links
-	}
-	if Dns := job.GetenvList("Dns"); Dns != nil {
-		hostConfig.Dns = Dns
-	}
-	if DnsSearch := job.GetenvList("DnsSearch"); DnsSearch != nil {
-		hostConfig.DnsSearch = DnsSearch
-	}
-	if VolumesFrom := job.GetenvList("VolumesFrom"); VolumesFrom != nil {
-		hostConfig.VolumesFrom = VolumesFrom
-	}
-	return hostConfig
+	return hc
 }

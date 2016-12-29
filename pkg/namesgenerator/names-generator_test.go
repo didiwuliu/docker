@@ -1,49 +1,27 @@
 package namesgenerator
 
 import (
+	"strings"
 	"testing"
 )
 
-type FalseChecker struct{}
-
-func (n *FalseChecker) Exists(name string) bool {
-	return false
-}
-
-type TrueChecker struct{}
-
-func (n *TrueChecker) Exists(name string) bool {
-	return true
-}
-
-func TestGenerateRandomName(t *testing.T) {
-	if _, err := GenerateRandomName(&FalseChecker{}); err != nil {
-		t.Error(err)
+func TestNameFormat(t *testing.T) {
+	name := GetRandomName(0)
+	if !strings.Contains(name, "_") {
+		t.Fatalf("Generated name does not contain an underscore")
 	}
-
-	if _, err := GenerateRandomName(&TrueChecker{}); err == nil {
-		t.Error("An error was expected")
-	}
-
-}
-
-// Make sure the generated names are awesome
-func TestGenerateAwesomeNames(t *testing.T) {
-	name, err := GenerateRandomName(&FalseChecker{})
-	if err != nil {
-		t.Error(err)
-	}
-	if !isAwesome(name) {
-		t.Fatalf("Generated name '%s' is not awesome.", name)
+	if strings.ContainsAny(name, "0123456789") {
+		t.Fatalf("Generated name contains numbers!")
 	}
 }
 
-// To be awesome, a container name must involve cool inventors, be easy to remember,
-// be at least mildly funny, and always be politically correct for enterprise adoption.
-func isAwesome(name string) bool {
-	coolInventorNames := true
-	easyToRemember := true
-	mildlyFunnyOnOccasion := true
-	politicallyCorrect := true
-	return coolInventorNames && easyToRemember && mildlyFunnyOnOccasion && politicallyCorrect
+func TestNameRetries(t *testing.T) {
+	name := GetRandomName(1)
+	if !strings.Contains(name, "_") {
+		t.Fatalf("Generated name does not contain an underscore")
+	}
+	if !strings.ContainsAny(name, "0123456789") {
+		t.Fatalf("Generated name doesn't contain a number")
+	}
+
 }

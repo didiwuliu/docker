@@ -8,6 +8,10 @@
 
 set -e
 
+echo >&2
+echo >&2 'warning: this script is deprecated - see mkimage.sh and mkimage/rinse'
+echo >&2
+
 repo="$1"
 distro="$2"
 mirror="$3"
@@ -35,7 +39,7 @@ if [ ! "$repo" ] || [ ! "$distro" ]; then
 	exit 1
 fi
 
-target="/tmp/docker-rootfs-rinse-$distro-$$-$RANDOM"
+target="${TMPDIR:-/var/tmp}/docker-rootfs-rinse-$distro-$$-$RANDOM"
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 returnTo="$(pwd -P)"
@@ -76,7 +80,7 @@ sudo mkdir -m 755 dev
 # effectively: febootstrap-minimize --keep-zoneinfo --keep-rpmdb --keep-services "$target"
 #  locales
 sudo rm -rf usr/{{lib,share}/locale,{lib,lib64}/gconv,bin/localedef,sbin/build-locale-archive}
-#  docs
+#  docs and man pages
 sudo rm -rf usr/share/{man,doc,info,gnome/help}
 #  cracklib
 sudo rm -rf usr/share/cracklib
